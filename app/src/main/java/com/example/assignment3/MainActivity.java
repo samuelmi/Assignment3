@@ -9,11 +9,15 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
 import java.io.ByteArrayOutputStream;
@@ -24,7 +28,9 @@ public class MainActivity extends AppCompatActivity {
 
     Bitmap image = null;
 
-    ScrollView scrollView;
+    Context context;
+
+    LinearLayout scrollView;
     EditText tags;
 
 
@@ -40,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
 
         scrollView = findViewById(R.id.scrollView);
         tags = findViewById(R.id.tags);
+
+        context = getApplicationContext();
     }
 
     public void buttonClicked (View v) {
@@ -97,7 +105,32 @@ public class MainActivity extends AppCompatActivity {
             }
             //Log.v("MyTag Num Results Part2", ""+ results.size());
 
-            
+            whereQuery = "";
+            for (int i = 0; i < results.size(); i++) {
+                whereQuery += String.format("rowid == \"%s\"", results.get(i));
+                if (i < results.size() - 1) whereQuery += " or ";
+            }
+            c = db.rawQuery(String.format("SELECT * from Images WHERE %s", whereQuery), null);
+            c.moveToFirst();
+            //Log.v("MyTag Num Images", ""+c.getCount();
+            ArrayList<Bitmap> images = new ArrayList<>();
+            for(int i = 0; i < c.getCount(); i++){
+                for(int j = 0; j < c.getColumnCount(); j++) {
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inMutable = true;
+                    byte[] data = (byte[]) c.getBlob(j);
+                    Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length, options);
+                    images.add(b);
+                }
+                c.moveToNext();
+            }
+            //Log.v("MyTag images size", ""+images.size());
+            scrollView.removeAllViews();
+            for (Bitmap b : images) {
+                ImageView iv = new ImageView(context);
+                iv.setImageBitmap(b);
+                scrollView.addView(iv);
+            }
 
         }
 
