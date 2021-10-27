@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.ScrollView;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     SQLiteDatabase db;
@@ -72,7 +73,32 @@ public class MainActivity extends AppCompatActivity {
 
         // Load is clicked
         if (id == R.id.loadButton) {
+            String[] tagList = tags.getText().toString().split(";");
+
+            // Constructs the WHERE clause for the query
+            String whereQuery = "";
+            for (int i = 0; i < tagList.length; i++) {
+                whereQuery += String.format("Tag == \"%s\"", tagList[i]);
+                if (i < tagList.length - 1) whereQuery += " or ";
+            }
+
+            Cursor c = db.rawQuery(String.format("SELECT ImageId from Tags WHERE %s", whereQuery), null);
+            //Log.v("MyTag Num Results", ""+c.getCount());
+            c.moveToFirst();
+
+            ArrayList<Integer> results = new ArrayList<>();
+
+            // Gets all unique ImageIds matching the tags
+            for(int i = 0; i < c.getCount(); i++){
+                for(int j = 0; j < c.getColumnCount(); j++) {
+                    if (!results.contains(c.getInt(j))) results.add(c.getInt(j));
+                }
+                c.moveToNext();
+            }
+            //Log.v("MyTag Num Results Part2", ""+ results.size());
+
             
+
         }
 
     }
