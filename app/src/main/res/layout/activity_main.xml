@@ -11,22 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:layout_centerHorizontal="true">
-        <ScrollView
-            android:layout_height="240dp"
-            android:layout_width="240dp"
-            android:layout_centerHorizontal="true"
-            android:minHeight="240dp"
-            android:minWidth="240dp"
-            android:background="@color/gray"
-            android:layout_gravity="center">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:id="@+id/scrollView">
 
-            </LinearLayout>
-        </ScrollView>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -52,27 +37,11 @@
             <Button
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:backgroundTint="@color/yellow"
-                android:text="Save"
-                android:id="@+id/saveButton"
-                android:onClick="buttonClicked"/>
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:backgroundTint="@color/blue_unc"
                 android:text="Load"
                 android:id="@+id/loadButton"
                 android:onClick="buttonClicked"/>
 
         </LinearLayout>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@color/orange"
-            android:text="Capture"
-            android:layout_gravity="center"
-            android:id="@+id/captureButton"
-            android:onClick="buttonClicked"/>
     </LinearLayout>
 </RelativeLayout>

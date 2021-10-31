@@ -26,11 +26,8 @@ import java.util.ArrayList;
 public class MainActivity extends AppCompatActivity {
     SQLiteDatabase db;
 
-    Bitmap image = null;
-
     Context context;
 
-    LinearLayout scrollView;
     EditText tags;
 
 
@@ -39,45 +36,54 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         db = openOrCreateDatabase("MyDatabase", Context.MODE_PRIVATE, null);
-        db.execSQL("DROP TABLE IF EXISTS Images");
+        db.execSQL("DROP TABLE IF EXISTS Photos");
         db.execSQL("DROP TABLE IF EXISTS Tags");
-        db.execSQL("CREATE TABLE Images( Image BLOB )");
-        db.execSQL("CREATE TABLE Tags( Tag Text, ImageId INT )");
+        db.execSQL("CREATE TABLE Photos( ID INT, Photo TEXT, Size INT )");
+        db.execSQL("CREATE TABLE Tags( ID INT, Tag TEXT )");
+        seadDb();
 
-        scrollView = findViewById(R.id.scrollView);
         tags = findViewById(R.id.tags);
 
         context = getApplicationContext();
+
+        printMyTable("Photos");
+        printMyTable("Tags");
+    }
+
+    public void seadDb() {
+        db.execSQL("INSERT INTO Photos VALUES (1, 'p1.jpeg', 100);");
+        db.execSQL("INSERT INTO Photos VALUES (2, 'p2.jpeg', 200);");
+        db.execSQL("INSERT INTO Photos VALUES (3, 'p3.jpeg', 300);");
+        db.execSQL("INSERT INTO Photos VALUES (4, 'p4.jpeg', 200);");
+        db.execSQL("INSERT INTO Tags VALUES (1, 'Old Well');");
+        db.execSQL("INSERT INTO Tags VALUES (1, 'UNC');");
+        db.execSQL("INSERT INTO Tags VALUES (2, 'Sitterson');");
+        db.execSQL("INSERT INTO Tags VALUES (2, 'Building');");
+        db.execSQL("INSERT INTO Tags VALUES (3, 'Sky');");
+        db.execSQL("INSERT INTO Tags VALUES (4, 'Dining');");
+        db.execSQL("INSERT INTO Tags VALUES (1, 'Building');");
+    }
+
+    public void printMyTable(String tableName) {
+        Cursor c = db.rawQuery(String.format("SELECT * FROM %s", tableName), null);
+
+        c.moveToFirst();
+
+        ArrayList<Integer> results = new ArrayList<>();
+
+        // Gets all unique ImageIds matching the tags
+        for(int i = 0; i < c.getCount(); i++){
+            String row = "";
+            for(int j = 0; j < c.getColumnCount(); j++) {
+                row += c.getString(j) + "\t";
+            }
+            Log.v("MyTag", row);
+            c.moveToNext();
+        }
     }
 
     public void buttonClicked (View v) {
         int id = v.getId();
-
-        // Capture is clicked
-        if (id == R.id.captureButton) {
-            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            startActivityForResult(cameraIntent, 1);
-        }
-
-        // Save is clicked
-        if (id == R.id.saveButton && image != null) {
-
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            image.compress(Bitmap.CompressFormat.PNG, 100, bos);
-            ContentValues contentValues = new ContentValues();
-            contentValues.put("Image", bos.toByteArray());
-
-            long entryId = db.insert("Images", null, contentValues);
-
-            String[] tagList = tags.getText().toString().split(";");
-            for (String t : tagList) {
-                contentValues = new ContentValues();
-                contentValues.put("Tag", t);
-                contentValues.put("ImageId", entryId);
-                db.insert("Tags", null, contentValues);
-            }
-            printDbContents();
-        }
 
         // Load is clicked
         if (id == R.id.loadButton) {
@@ -90,8 +96,7 @@ public class MainActivity extends AppCompatActivity {
                 if (i < tagList.length - 1) whereQuery += " or ";
             }
 
-            Cursor c = db.rawQuery(String.format("SELECT ImageId from Tags WHERE %s", whereQuery), null);
-            //Log.v("MyTag Num Results", ""+c.getCount());
+            Cursor c = db.rawQuery(String.format("SELECT ID from Tags WHERE %s", whereQuery), null);
             c.moveToFirst();
 
             ArrayList<Integer> results = new ArrayList<>();
@@ -107,31 +112,25 @@ public class MainActivity extends AppCompatActivity {
 
             whereQuery = "";
             for (int i = 0; i < results.size(); i++) {
-                whereQuery += String.format("rowid == \"%s\"", results.get(i));
+                whereQuery += String.format("ID == \"%s\"", results.get(i));
                 if (i < results.size() - 1) whereQuery += " or ";
             }
-            c = db.rawQuery(String.format("SELECT * from Images WHERE %s", whereQuery), null);
+            c = db.rawQuery(String.format("SELECT Photo from Photos WHERE %s", whereQuery), null);
             c.moveToFirst();
             //Log.v("MyTag Num Images", ""+c.getCount();
-            ArrayList<Bitmap> images = new ArrayList<>();
+            ArrayList<String> images = new ArrayList<>();
             for(int i = 0; i < c.getCount(); i++){
                 for(int j = 0; j < c.getColumnCount(); j++) {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inMutable = true;
-                    byte[] data = (byte[]) c.getBlob(j);
-                    Bitmap b = BitmapFactory.decodeByteArray(data, 0, data.length, options);
-                    images.add(b);
+                    images.add(c.getString(j));
                 }
                 c.moveToNext();
             }
-            //Log.v("MyTag images size", ""+images.size());
-            scrollView.removeAllViews();
-            for (Bitmap b : images) {
-                ImageView iv = new ImageView(context);
-                iv.setImageBitmap(b);
-                scrollView.addView(iv);
-            }
 
+            String photoResults = "";
+            for (String i : images) {
+                photoResults += i + "\t";
+            }
+            Log.v("MyTag", photoResults);
         }
 
     }
@@ -159,12 +158,6 @@ public class MainActivity extends AppCompatActivity {
             c.moveToNext();
 
         }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        image = (Bitmap) data.getExtras().get("data");
     }
 
 
